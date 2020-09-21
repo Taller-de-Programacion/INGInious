@@ -148,6 +148,7 @@ class DockerInterface(object):  # pragma: no cover
             mem_swappiness=0,
             oom_kill_disable=True,
             network_mode=('none' if not network_grading else ('container:' + parent_container_id)),
+            ulimits=[docker.types.Ulimit(name='core', soft=0, hard=0)],
             volumes={
                 student_path: {'bind': '/task/student'},
                  socket_path: {'bind': '/__parent.sock'},

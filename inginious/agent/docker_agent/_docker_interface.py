@@ -136,6 +136,9 @@ class DockerInterface(object):  # pragma: no cover
         systemfiles_path = os.path.abspath(systemfiles_path)
         course_common_student_path = os.path.abspath(course_common_student_path)
 
+        course_common_public_path = os.path.join(course_common_student_path, '..', 'public')
+        task_public_path = os.path.join(student_path, '..', 'public')
+
         response = self._docker.containers.create(
             environment,
             stdin_open=True,
@@ -149,7 +152,9 @@ class DockerInterface(object):  # pragma: no cover
                 student_path: {'bind': '/task/student'},
                  socket_path: {'bind': '/__parent.sock'},
                  systemfiles_path: {'bind': '/task/systemfiles', 'mode': 'ro'},
-                 course_common_student_path: {'bind': '/course/common/student', 'mode': 'ro'}
+                 course_common_student_path: {'bind': '/course/common/student', 'mode': 'ro'},
+                 course_common_public_path: {'bind': '/course/common/public', 'mode': 'ro'},
+                 task_public_path: {'bind': '/task/public', 'mode': 'ro'}
             }
         )
         return response.id

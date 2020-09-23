@@ -46,9 +46,9 @@ else:
     # Parse the parameters from environment variables
     host = os.environ["INGINIOUS_WEBAPP_HOST"]
     port = os.environ["INGINIOUS_WEBAPP_PORT"]
-    mongodb_url = os.environ["INGINIOUS_MONGODB_URL"]
     configfile = os.environ["INGINIOUS_WEBAPP_CONFIG"]
 
+mongodb_url = os.environ["INGINIOUS_MONGODB_URL"]
 if not configfile:
     if os.path.isfile("./configuration.yaml"):
         configfile = "./configuration.yaml"

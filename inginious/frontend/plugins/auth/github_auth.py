@@ -38,7 +38,9 @@ class GithubAuthMethod(AuthMethod):
             profile["email"] = json.loads(r.content.decode('utf-8'))[0]["email"]
             realname = profile["name"] if profile.get("name", None) else profile["login"]
             return str(profile["id"]), realname, profile["email"], {}
-        except:
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
             return None
 
     def share(self, auth_storage, course, task, submission, language):

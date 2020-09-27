@@ -103,13 +103,22 @@ class RegistrationPage(INGIniousPage):
                                             "bindings": {},
                                             "language": self.user_manager._session.get("language", "en")})
                 try:
-                    web.sendmail(web.config.smtp_sendername, data["email"], _("Welcome on INGInious"),
-                                 _("""Welcome on INGInious !
 
-To activate your account, please click on the following link :
-""")
-                                 + web.ctx.home + "/register?activate=" + activate_hash)
-                    msg = _("You are succesfully registered. An email has been sent to you for activation.")
+                    link = web.ctx.home + "/register?activate=" + activate_hash
+                    if False:
+                        web.sendmail(web.config.smtp_sendername, data["email"], _("Welcome on INGInious"),
+                                     _("""Welcome on INGInious !
+
+    To activate your account, please click on the following link :
+    """)
+                                     + link)
+                        msg = _("You are succesfully registered. An email has been sent to you for activation.")
+                    else:
+                        self.logger.info("New user registration (%s). Activation link: %s",
+                                data["email"],
+                                link
+                                )
+                        msg = _("You are succesfully registered. An administrator will approve your request soon.")
                 except:
                     error = True
                     msg = _("Something went wrong while sending you activation email. Please contact the administrator.")
@@ -138,12 +147,20 @@ To activate your account, please click on the following link :
                 msg = _("This email address was not found in database.")
             else:
                 try:
-                    web.sendmail(web.config.smtp_sendername, data["recovery_email"], _("INGInious password recovery"),
-                                 _("""Dear {realname},
+                    link = web.ctx.home + "/register?reset=" + reset_hash
+                    if False:
+                        web.sendmail(web.config.smtp_sendername, data["recovery_email"], _("INGInious password recovery"),
+                                     _("""Dear {realname},
 
-Someone (probably you) asked to reset your INGInious password. If this was you, please click on the following link :
-""").format(realname=user["realname"]) + web.ctx.home + "/register?reset=" + reset_hash)
-                    msg = _("An email has been sent to you to reset your password.")
+    Someone (probably you) asked to reset your INGInious password. If this was you, please click on the following link :
+    """).format(realname=user["realname"]) + link)
+                        msg = _("An email has been sent to you to reset your password.")
+                    else:
+                        self.logger.info("User reset password (%s). Reset link: %s",
+                                data["recovery_email"],
+                                link
+                                )
+                        msg = _("An administrator will approve your request soon.")
                 except:
                     error = True
                     msg = _("Something went wrong while sending you reset email. Please contact the administrator.")

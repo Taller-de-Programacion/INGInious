@@ -7,6 +7,7 @@
 
 import json
 import os
+import re
 
 import web
 from requests_oauthlib import OAuth2Session
@@ -37,11 +38,29 @@ class GithubAuthMethod(AuthMethod):
             r = github.get('https://api.github.com/user/emails')
             profile["email"] = json.loads(r.content.decode('utf-8'))[0]["email"]
             realname = profile["name"] if profile.get("name", None) else profile["login"]
+            self._create_user_if_doesnt_exist(profile, realname)
             return str(profile["id"]), realname, profile["email"], {}
         except Exception as e:
             import traceback
             traceback.print_exc()
             return None
+
+    def _create_user_if_doesnt_exist(self, profile, realname):
+        login = profile['login']
+        email = profile['email']
+        if re.match(r"^[-_|~0-9A-Z]{4,}$", login, re.IGNORECASE) is None:
+            raise Exception("Invalid username")
+
+        if self.database.users.find_one({"username": login}):
+            return
+
+        self.user_manager.disconnect_user()
+        self.user_manager.connect_user(
+                login,
+                realname,
+                email,
+                'en'
+                )
 
     def share(self, auth_storage, course, task, submission, language):
         return False
@@ -74,4 +93,12 @@ def init(plugin_manager, course_factory, client, conf):
     client_id = conf.get("client_id", "")
     client_secret = conf.get("client_secret", "")
 
-    plugin_manager.register_auth_method(GithubAuthMethod(conf.get("id"), conf.get('name', 'Github'), client_id, client_secret))
+    auth_meth = GithubAuthMethod(
+                conf.get("id"),
+                conf.get('name', 'Github'),
+                client_id,
+                client_secret
+                )
+    auth_meth.database = plugin_manager.get_database()
+    auth_meth.user_manager = plugin_manager.get_user_manager()
+    plugin_manager.register_auth_method(auth_meth)

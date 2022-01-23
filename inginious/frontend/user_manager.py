@@ -696,8 +696,12 @@ class UserManager:
             self._database.aggregations.find_one_and_update({"courseid": course.get_id(), "default": True},
                                                           {"$push": {"students": username}})
 
+        self.create_github_repositories(username, course)
         self._logger.info("User %s registered to course %s", username, course.get_id())
         return True
+
+    def create_github_repositories(self, username, course):
+        self._logger.info("Creating Github repositories for user %s registered to course %s", username, course.get_id())
 
     def course_unregister_user(self, course, username=None):
         """

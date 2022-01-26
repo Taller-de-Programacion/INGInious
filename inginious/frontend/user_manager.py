@@ -16,7 +16,7 @@ from collections import OrderedDict
 import pymongo
 from binascii import hexlify
 import os
-
+import subprocess
 
 class AuthInvalidInputException(Exception):
     pass
@@ -701,7 +701,45 @@ class UserManager:
         return True
 
     def create_github_repositories(self, username, course):
-        self._logger.info("Creating Github repositories for user %s registered to course %s", username, course.get_id())
+        gh_token = os.environ.get('GH_TOKEN')
+        if not gh_token:
+            self._logger.info("Github repositories will not be created for user %s registered to course %s", username, course.get_id())
+        else:
+            self._logger.info("Creating Github repositories for user %s registered to course %s", username, course.get_id())
+
+        for ix in range(10):
+            tmp = os.environ.get('GITHUB_STUDENT_REPO_%i' % i, '')
+            if not tmp:
+                continue
+
+            template, student_repo = tmp.split(";")
+            student_repo = student_repo.format(course=course.get_id(), name=username)
+
+            self._logger.info("Creating '%s' from '%s'", student_repo, template)
+
+            try:
+                # Create a private github repository using another repository as
+                # template.
+                subprocess.check_output(
+                        "gh", "repo", "create", "--private",
+                        "--template", "'%s'" % template,
+                        "'%s'" % student_repo,
+                        stderr=subprocess.STDOUT
+                        )
+            except subprocess.CalledProcessError as err:
+                self._logger.error("Repo creation failed with code %s: %s" % err.returncode, err.output)
+
+            try:
+                # Add the student as collaborator for the private repository
+                # allowing him/her to pull and push changes.
+                subprocess.check_output(
+                        "gh", "api", "-X", "PUT",
+                        "'repos/%s/collaborators/%s'" % (student_repo, username),
+                        "-f", "permission=push"
+                        )
+            except subprocess.CalledProcessError as err:
+                self._logger.error("Add a collaborator failed with code %s: %s" % err.returncode, err.output)
+
 
     def course_unregister_user(self, course, username=None):
         """

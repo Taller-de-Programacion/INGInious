@@ -114,7 +114,8 @@ class DockerInterface(object):  # pragma: no cover
                 sockets_path: {'bind': '/sockets'},
                 course_common_path: {'bind': '/course/common', 'mode': 'ro'},
                 course_common_student_path: {'bind': '/course/common/student', 'mode': 'ro'}
-            }
+            },
+            environment={'GH_TOKEN':os.environ.get('GH_TOKEN', '')}
         )
         return response.id
 

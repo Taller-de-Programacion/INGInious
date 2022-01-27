@@ -708,7 +708,7 @@ class UserManager:
             self._logger.info("Creating Github repositories for user %s registered to course %s", username, course.get_id())
 
         for ix in range(10):
-            tmp = os.environ.get('GITHUB_STUDENT_REPO_%i' % i, '')
+            tmp = os.environ.get('GITHUB_STUDENT_REPO_%i' % ix, '')
             if not tmp:
                 continue
 

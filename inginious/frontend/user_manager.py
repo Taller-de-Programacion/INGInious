@@ -17,6 +17,7 @@ import pymongo
 from binascii import hexlify
 import os
 import subprocess
+import traceback
 
 class AuthInvalidInputException(Exception):
     pass
@@ -696,7 +697,11 @@ class UserManager:
             self._database.aggregations.find_one_and_update({"courseid": course.get_id(), "default": True},
                                                           {"$push": {"students": username}})
 
-        self.create_github_repositories(username, course)
+        try:
+            self.create_github_repositories(username, course)
+        except Exception as err:
+            self._logger.error("Error creating github repos %s:\n%s" % (err, traceback.format_exc()))
+
         self._logger.info("User %s registered to course %s", username, course.get_id())
         return True
 

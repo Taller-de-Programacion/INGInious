@@ -86,7 +86,7 @@ class LocalFSProvider(FileSystemProvider):
                 return []
             output = [f for f in os.listdir(self.prefix) if condition(f)]
         isdir = lambda x: '/' if os.path.isdir(os.path.join(self.prefix, x)) else ''
-        return [f+isdir(f) for f in output]
+        return [f+isdir(f) for f in output if not f.startswith('.')]
 
     def delete(self, filepath=None):
         if filepath is None:

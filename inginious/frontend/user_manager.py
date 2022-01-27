@@ -725,22 +725,22 @@ class UserManager:
             try:
                 # Create a private github repository using another repository as
                 # template.
-                subprocess.check_output(
+                subprocess.check_output([
                         "gh", "repo", "create", "--private",
-                        "--template", "'%s'" % template,
-                        "'%s'" % student_repo
-                        )
+                        "--template", template,
+                        student_repo
+                        ])
             except subprocess.CalledProcessError as err:
                 self._logger.error("Repo creation failed with code %s: %s\n%s" % err.returncode, err.stdout, err.stderr)
 
             try:
                 # Add the student as collaborator for the private repository
                 # allowing him/her to pull and push changes.
-                subprocess.check_output(
+                subprocess.check_output([
                         "gh", "api", "-X", "PUT",
-                        "'repos/%s/collaborators/%s'" % (student_repo, username),
+                        "repos/%s/collaborators/%s" % (student_repo, username),
                         "-f", "permission=push"
-                        )
+                        ])
             except subprocess.CalledProcessError as err:
                 self._logger.error("Add a collaborator failed with code %s: %s\n%s" % err.returncode, err.stdout, err.stderr)
 

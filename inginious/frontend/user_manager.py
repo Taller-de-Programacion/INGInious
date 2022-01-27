@@ -728,11 +728,10 @@ class UserManager:
                 subprocess.check_output(
                         "gh", "repo", "create", "--private",
                         "--template", "'%s'" % template,
-                        "'%s'" % student_repo,
-                        stderr=subprocess.STDOUT
+                        "'%s'" % student_repo
                         )
             except subprocess.CalledProcessError as err:
-                self._logger.error("Repo creation failed with code %s: %s" % err.returncode, err.output)
+                self._logger.error("Repo creation failed with code %s: %s\n%s" % err.returncode, err.stdout, err.stderr)
 
             try:
                 # Add the student as collaborator for the private repository
@@ -743,7 +742,7 @@ class UserManager:
                         "-f", "permission=push"
                         )
             except subprocess.CalledProcessError as err:
-                self._logger.error("Add a collaborator failed with code %s: %s" % err.returncode, err.output)
+                self._logger.error("Add a collaborator failed with code %s: %s\n%s" % err.returncode, err.stdout, err.stderr)
 
 
     def course_unregister_user(self, course, username=None):

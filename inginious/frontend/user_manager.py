@@ -15,7 +15,7 @@ from natsort import natsorted
 from collections import OrderedDict
 import pymongo
 from binascii import hexlify
-import os
+import os, time
 import subprocess
 import traceback
 
@@ -733,16 +733,34 @@ class UserManager:
             except subprocess.CalledProcessError as err:
                 self._logger.error("Repo creation failed with code %s: %s\n%s" % (err.returncode, err.stdout, err.stderr))
 
-            try:
-                # Add the student as collaborator for the private repository
-                # allowing him/her to pull and push changes.
-                subprocess.check_output([
-                        "gh", "api", "-X", "PUT",
-                        "repos/%s/collaborators/%s" % (student_repo, username),
-                        "-f", "permission=push"
-                        ])
-            except subprocess.CalledProcessError as err:
-                self._logger.error("Add a collaborator failed with code %s: %s\n%s" % (err.returncode, err.stdout, err.stderr))
+            tries = 2
+            collaborator_added = False
+            saved_err = None
+            while not collaborator_added and tries > 0:
+                tries -= 1
+                try:
+                    # Add the student as collaborator for the private repository
+                    # allowing him/her to pull and push changes.
+                    subprocess.check_output([
+                            "gh", "api", "-X", "PUT",
+                            "repos/%s/collaborators/%s" % (student_repo, username),
+                            "-f", "permission=push"
+                            ])
+                    collaborator_added = True
+                except subprocess.CalledProcessError as err:
+                    # There is a race condition between the repo creation and
+                    # registration of a new collaborator. It could happen
+                    # that the repo is not created yet and we try to add
+                    # the collaborator.
+                    # No real fix exist (we could query Github but there are
+                    # not guarantees).
+                    # The solution is to backoff a little and retry later
+                    saved_err = err
+                    if tries > 0:
+                        time.sleep(2)
+
+            if not collaborator_added:
+                self._logger.error("Add a collaborator failed with code %s: %s\n%s" % (saved_err.returncode, saved_err.stdout, saved_err.stderr))
 
 
     def course_unregister_user(self, course, username=None):

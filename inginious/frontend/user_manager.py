@@ -712,10 +712,26 @@ class UserManager:
         else:
             self._logger.info("Creating Github repositories for user %s registered to course %s", username, course.get_id())
 
+        # Loop first creating the repositories and then add the student as
+        # a collaborator on each repo.
+        #
+        # Splitting this for-loop into two has the side benefit that there
+        # is more time between the creation of the repo and the addition of the
+        # collaborator reducing the probability of Github rejecting the addition
+        # of the collaborator because the repo was not created yet.
+        #
+        # The code is racy, we cannot do much about it.
+        first_iteration = True
         for ix in range(10):
             tmp = os.environ.get('GITHUB_STUDENT_REPO_%i' % ix, '')
             if not tmp:
                 continue
+
+            if not first_iteration:
+                # Wait a little before doing another loop
+                time.sleep(0.5)
+            else:
+                first_iteration = False
 
             template, student_repo = tmp.split(";")
             student_repo = student_repo.format(course=course.get_id(), name=username)
@@ -733,6 +749,23 @@ class UserManager:
             except subprocess.CalledProcessError as err:
                 self._logger.error("Repo creation failed with code %s: %s\n%s" % (err.returncode, err.stdout, err.stderr))
 
+        # Wait a little before adding the collaborators
+        time.sleep(0.5)
+
+        first_iteration = True
+        for ix in range(10):
+            tmp = os.environ.get('GITHUB_STUDENT_REPO_%i' % ix, '')
+            if not tmp:
+                continue
+
+            if not first_iteration:
+                # Wait a little before doing another loop
+                time.sleep(0.5)
+            else:
+                first_iteration = False
+
+            template, student_repo = tmp.split(";")
+            student_repo = student_repo.format(course=course.get_id(), name=username)
             tries = 2
             collaborator_added = False
             saved_err = None
@@ -747,6 +780,7 @@ class UserManager:
                             "-f", "permission=push"
                             ])
                     collaborator_added = True
+
                 except subprocess.CalledProcessError as err:
                     # There is a race condition between the repo creation and
                     # registration of a new collaborator. It could happen

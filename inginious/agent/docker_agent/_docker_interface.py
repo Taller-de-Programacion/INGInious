@@ -54,7 +54,7 @@ class DockerInterface(object):  # pragma: no cover
                 #                 YYYY - MM -  DD -  HH  : MM  : SS (fraction part dropped)
                 created_str_len =  4  +1 +2 +1 +2 +1 +2 +1 +2 +1 +2
                 created = x.attrs['Created'][:created_str_len]
-                created = datetime.strptime(created, "%Y-%m-%dT%H:%M:%S.%f").timestamp()
+                created = datetime.strptime(created, "%Y-%m-%dT%H:%M:%S").timestamp()
                 ports = [int(y) for y in x.labels["org.inginious.grading.ports"].split(
                     ",")] if "org.inginious.grading.ports" in x.labels else []
                 images[x.attrs['Id']] = {"title": title, "created": created, "ports": ports}

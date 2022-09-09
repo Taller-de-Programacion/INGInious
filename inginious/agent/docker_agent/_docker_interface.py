@@ -51,12 +51,16 @@ class DockerInterface(object):  # pragma: no cover
                         str(x.labels.get("org.inginious.grading.agent_version")), DOCKER_AGENT_VERSION)
                     continue
 
-                created = datetime.strptime(x.attrs['Created'][:-4], "%Y-%m-%dT%H:%M:%S.%f").timestamp()
+                #                 YYYY - MM -  DD -  HH  : MM  : SS (fraction part dropped)
+                created_str_len =  4  +1 +2 +1 +2 +1 +2 +1 +2 +1 +2
+                created = x.attrs['Created'][:created_str_len]
+                created = datetime.strptime(created, "%Y-%m-%dT%H:%M:%S.%f").timestamp()
                 ports = [int(y) for y in x.labels["org.inginious.grading.ports"].split(
                     ",")] if "org.inginious.grading.ports" in x.labels else []
                 images[x.attrs['Id']] = {"title": title, "created": created, "ports": ports}
+                logging.getLogger("inginious.agent").info("Container %s loaded (created %s, ports %s)", title, created, ports)
             except:
-                logging.getLogger("inginious.agent").exception("Container %s is badly formatted", title or "[cannot load title]")
+                logging.getLogger("inginious.agent").exception("Container %s is badly formatted\nAttrs: %s\nLabels: %s", title or "[cannot load title]", x.attrs, x.labels)
 
         # Then, we keep only the last version of each name
         latest = {}

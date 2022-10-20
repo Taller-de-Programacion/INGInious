@@ -262,6 +262,8 @@ class WebAppSubmissionManager:
         inputdata["@random"] = states["random"] if "random" in states else []
         inputdata["@state"] = states["state"] if "state" in states else ""
 
+        inputdata["@is_username_admin"] = "1" if self._user_manager.user_is_superadmin() else "0"
+
         self._hook_manager.call_hook("new_submission", submission=obj, inputdata=inputdata)
         obj["input"] = self._gridfs.put(bson.BSON.encode(inputdata))
 

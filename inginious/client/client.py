@@ -195,13 +195,13 @@ class Client(BetterParanoidPirateClient):
     async def _handle_update_containers(self, message: BackendUpdateContainers):
         self._available_containers = message.available_containers
         self._logger.info("Updated containers")
-        self._logger.debug("Containers: %s", str(self._available_containers))
+        self._logger.info("Containers: %s", str(self._available_containers))
 
     async def _handle_job_started(self, message: BackendJobStarted, **kwargs):  # pylint: disable=unused-argument
-        self._logger.debug("Job %s started", message.job_id)
+        self._logger.info("Job %s started", message.job_id)
 
     async def _handle_job_done(self, message: BackendJobDone, task, callback, ssh_callback):  # pylint: disable=unused-argument
-        self._logger.debug("Job %s done", message.job_id)
+        self._logger.info("Job %s done", message.job_id)
         job_id = message.job_id
 
         # Ensure ssh_callback is called at least once

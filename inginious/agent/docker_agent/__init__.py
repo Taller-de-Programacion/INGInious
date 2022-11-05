@@ -316,7 +316,7 @@ class DockerAgent(Agent):
         :param write_stream: stream on which to write the return value of the container (with a correctly formatted msgpack message)
         """
         try:
-            self._logger.debug("Starting new student container... %s %s %s %s", environment_name, memory_limit, time_limit, hard_time_limit)
+            self._logger.info("Starting new student container... %s %s %s %s", environment_name, memory_limit, time_limit, hard_time_limit)
 
             if environment_name not in self._containers:
                 self._logger.warning("Student container asked for an unknown environment %s (not in aliases)", environment_name)
@@ -414,7 +414,7 @@ class DockerAgent(Agent):
                         buffer = buffer[4 + struct.unpack('I', buffer[0:4])[0]:]  # ... withdraw it from the buffer
                         try:
                             msg = msgpack.unpackb(msg_encoded, use_list=False)
-                            self._logger.debug("Received msg %s from container %s", msg["type"], container_id)
+                            self._logger.info("Received msg %s from container %s", msg["type"], container_id)
                             if msg["type"] == "run_student":
                                 # start a new student container
                                 environment = msg["environment"] or orig_env
@@ -438,7 +438,7 @@ class DockerAgent(Agent):
                         except:
                             self._logger.exception("Received incorrect message from container %s (job id %s)", container_id, job_id)
         except asyncio.IncompleteReadError:
-            self._logger.debug("Container output ended with an IncompleteReadError; It was probably killed.")
+            self._logger.info("Container output ended with an IncompleteReadError; It was probably killed.")
         except asyncio.CancelledError:
             write_stream.close()
             sock.close_socket()
@@ -460,7 +460,7 @@ class DockerAgent(Agent):
         container
         """
         try:
-            self._logger.debug("Closing student %s", container_id)
+            self._logger.info("Closing student %s", container_id)
             try:
                 job_id, parent_container_id, socket_id, write_stream = self._student_containers_running[container_id]
                 del self._student_containers_running[container_id]
@@ -508,7 +508,7 @@ class DockerAgent(Agent):
         Handle a closing student container. Do some cleaning, verify memory limits, timeouts, ... and returns data to the backend
         """
         try:
-            self._logger.debug("Closing %s", container_id)
+            self._logger.info("Closing %s", container_id)
             try:
                 message, container_path, future_results = self._containers_running[container_id]
                 del self._containers_running[container_id]
@@ -618,7 +618,7 @@ class DockerAgent(Agent):
             try:
                 await self._ashutil.rmtree(container_path)
             except PermissionError:
-                self._logger.debug("Cannot remove old container path!")
+                self._logger.info("Cannot remove old container path!")
                 pass  # todo: run a docker container to force removal
 
             # Return!

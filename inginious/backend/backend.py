@@ -218,12 +218,13 @@ class Backend(object):
         self._ping_count[agent_addr] = 0
 
         # update information about available containers
+        self._logger.info("update information about available containers")
         for container_name, container_info in message.available_containers.items():
             if container_name in self._containers:
                 # check if the id is the same
                 if self._containers[container_name][0] == container_info["id"]:
                     # ok, just add the agent to the list of agents that have the container
-                    self._logger.debug("Registering container %s for agent %s", container_name, str(agent_addr))
+                    self._logger.info("Registering container %s for agent %s", container_name, str(agent_addr))
                     self._containers[container_name][2].append(agent_addr)
                 elif self._containers[container_name][1] > container_info["created"]:
                     # containers stored have been created after the new one
@@ -248,7 +249,7 @@ class Backend(object):
                                                         self._containers[container_name][2] + [agent_addr])
             else:
                 # just add it
-                self._logger.debug("Registering container %s for agent %s", container_name, str(agent_addr))
+                self._logger.info("Registering container %s for agent %s", container_name, str(agent_addr))
                 self._containers[container_name] = (container_info["id"], container_info["created"], [agent_addr])
 
         # update the queue
@@ -259,7 +260,7 @@ class Backend(object):
 
     async def handle_agent_job_started(self, agent_addr, message: AgentJobStarted):
         """Handle an AgentJobStarted message. Send the data back to the client"""
-        self._logger.debug("Job %s %s started on agent %s", message.job_id[0], message.job_id[1], agent_addr)
+        self._logger.info("Job %s %s started on agent %s", message.job_id[0], message.job_id[1], agent_addr)
         await ZMQUtils.send_with_addr(self._client_socket, message.job_id[0], BackendJobStarted(message.job_id[1]))
 
     async def handle_agent_job_done(self, agent_addr, message: AgentJobDone):

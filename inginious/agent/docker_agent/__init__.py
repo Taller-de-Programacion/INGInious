@@ -252,6 +252,9 @@ class DockerAgent(Agent):
 
         # Run the container
         try:
+            self._logger.info("Creating container (env=%s net=%s mem=%s task=%s skt=%s commonpath=%s studentpath=%s ports=%s" % (environment, enable_network, mem_limit, task_path,
+                                                              sockets_path, course_common_path,
+                                                              course_common_student_path, ports))
             container_id = self._docker.sync.create_container(environment, enable_network, mem_limit, task_path,
                                                               sockets_path, course_common_path,
                                                               course_common_student_path, ports)
@@ -343,7 +346,9 @@ class DockerAgent(Agent):
             self._student_containers_running[container_id] = job_id, parent_container_id, socket_id, write_stream
 
             # send to the container that the sibling has started
-            await self._write_to_container_stdin(write_stream, {"type": "run_student_started", "socket_id": socket_id})
+            Smsg = {"type": "run_student_started", "socket_id": socket_id}
+            self._logger.info("Sending Smsg: %s", Smsg)
+            await self._write_to_container_stdin(write_stream, Smsg)
 
             try:
                 await self._docker.start_container(container_id)
@@ -392,6 +397,8 @@ class DockerAgent(Agent):
         hello_msg = {"type": "start", "input": inputdata, "debug": debug}
         if run_cmd is not None:
             hello_msg["run_cmd"] = run_cmd
+
+        self._logger.info("Sending hello_msg: %s", hello_msg)
         await self._write_to_container_stdin(write_stream, hello_msg)
         result = None
 
@@ -485,7 +492,9 @@ class DockerAgent(Agent):
                 retval = 252
 
             try:
-                await self._write_to_container_stdin(write_stream, {"type": "run_student_retval", "retval": retval, "socket_id": socket_id})
+                Xmsg = {"type": "run_student_retval", "retval": retval, "socket_id": socket_id}
+                self._logger.info("Sending Xmsg: %s", Xmsg)
+                await self._write_to_container_stdin(write_stream, Xmsg)
             except asyncio.CancelledError:
                 raise
             except:

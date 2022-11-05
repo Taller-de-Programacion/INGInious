@@ -22,7 +22,7 @@ install_requires = [
     "lti>=0.9.0, <1",
     "oauth2==1.9.0.post1",
     "httplib2==0.20.4",
-    "watchdog >= 0.8.3, <1",
+    "watchdog >= 0.8.3",
     "msgpack == 1.0.0",
     "pyzmq == 23.2.1",
     "natsort == 8.1.0",

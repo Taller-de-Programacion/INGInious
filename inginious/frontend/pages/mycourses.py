@@ -7,6 +7,7 @@
 from collections import OrderedDict
 
 import web
+import traceback
 
 from inginious.frontend.pages.utils import INGIniousAuthPage
 

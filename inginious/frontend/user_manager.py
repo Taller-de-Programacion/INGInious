@@ -129,7 +129,7 @@ class UserManager:
         return self._session.token
 
     def session_lti_info(self):
-        """ If the current session is an LTI one, returns a dict in the form 
+        """ If the current session is an LTI one, returns a dict in the form
             {
                 "email": email,
                 "username": username
@@ -142,7 +142,7 @@ class UserManager:
             }
             where all these data where provided by the LTI consumer, and MAY NOT be equivalent to the data
             contained in database for the currently connected user.
-            
+
             If the current session is not an LTI one, returns None.
         """
         if "lti" in self._session:
@@ -231,7 +231,7 @@ class UserManager:
     def attempt_lti_login(self):
         """ Given that the current session is an LTI one (session_lti_info does not return None), attempt to find an INGInious user
             linked to this lti username/consumer_key. If such user exists, logs in using it.
-             
+
             Returns True (resp. False) if the login was successful
         """
         if "lti" not in self._session:
@@ -679,14 +679,25 @@ class UserManager:
 
         # Do not continue registering the user in the course if username is empty.
         if not username:
+            self._logger.info("User register to course %s failed: empty username", course.get_id())
             return False
 
         if not force:
             if not course.is_registration_possible(user_info):
+                AO = course.get_accessibility().is_open()
+                RO = course._registration.is_open()
+                AC = course.is_user_accepted_by_access_control(user_info)
+                self._logger.info("User %s could not registered to course %s: AO=%s RO=%s AC=%s", username, course.get_id(), AO, RO, AC)
                 return False
+
             if course.is_password_needed_for_registration() and course.get_registration_password() != password:
+                RPlen = len(course.get_registration_password())
+                Plen = len(password)
+                self._logger.info("User %s could not registered to course %s: password incorrect (%s/%s)", username, course.get_id(), RPlen, Plen)
                 return False
+
         if self.course_is_user_registered(course, username):
+            self._logger.info("User %s could not registered to course %s: it is already registered", username, course.get_id())
             return False  # already registered?
 
         aggregation = self._database.aggregations.find_one({"courseid": course.get_id(), "default": True})

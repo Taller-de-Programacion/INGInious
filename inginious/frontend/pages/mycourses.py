@@ -31,17 +31,24 @@ class MyCoursesPage(INGIniousAuthPage):
             try:
                 course = self.course_factory.get_course(user_input["register_courseid"])
                 if not course.is_registration_possible(user_info):
+                    AO = course.get_accessibility().is_open()
+                    RO = course._registration.is_open()
+                    AC = course.is_user_accepted_by_access_control(user_info)
+                    self.logger.info("User %s could not registered to course %s: AO=%s RO=%s AC=%s", username, course.get_id(), AO, RO, AC)
                     success = False
                 else:
                     success = self.user_manager.course_register_user(course, username, user_input.get("register_password", None))
-            except:
+            except Exception as err:
+                self.logger.error("Error handling registration to a course %s:\n%s" % (err, traceback.format_exc()))
                 success = False
+
         elif "new_courseid" in user_input and self.user_manager.user_is_superadmin():
             try:
                 courseid = user_input["new_courseid"]
                 self.course_factory.create_course(courseid, {"name": courseid, "accessible": False})
                 success = True
-            except:
+            except Exception as err:
+                self.logger.error("Error handling registration to a course %s:\n%s" % (err, traceback.format_exc()))
                 success = False
 
         return self.show_page(success)

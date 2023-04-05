@@ -283,9 +283,9 @@ class WebAppSubmissionManager:
             {"$set": {"jobid": jobid}}
         )
 
-        self._logger.info("New submission from %s - %s - %s/%s - %s", self._user_manager.session_username(),
+        self._logger.info("New submission from %s - %s - %s/%s - %s - job id: %s", self._user_manager.session_username(),
                           self._user_manager.session_email(), task.get_course_id(), task.get_id(),
-                          web.ctx['ip'])
+                          web.ctx['ip'], str(jobid))
 
         return submissionid, to_remove
 

@@ -98,7 +98,7 @@ class Backend(object):
 
     async def handle_client_hello(self, client_addr, _: ClientHello):
         """ Handle an ClientHello message. Send available containers to the client """
-        self._logger.info("New client connected %s", client_addr)
+        self._logger.info("New client connected %s", str(client_addr))
         self._registered_clients.add(client_addr)
         await self.send_container_update_to_client([client_addr])
 
@@ -108,9 +108,12 @@ class Backend(object):
 
     async def handle_client_new_job(self, client_addr, message: ClientNewJob):
         """ Handle an ClientNewJob message. Add a job to the queue and triggers an update """
-        self._logger.info("Adding a new job %s %s to the queue", client_addr, message.job_id)
+        self._logger.info("Adding a new job %s %s to the queue", str(client_addr), str(message.job_id))
 
         job = (message.priority, time.time(), client_addr, message.job_id, message)
+        if (client_addr, message.job_id) in self._waiting_jobs:
+            self._logger.warning("Adding a new job %s %s to the queue but the job is already there!", str(client_addr), str(message.job_id))
+
         self._waiting_jobs[(client_addr, message.job_id)] = job
         self._waiting_jobs_pq.put(job)
 
@@ -123,7 +126,7 @@ class Backend(object):
 
             # Erase the job reference in priority queue
             job = self._waiting_jobs.pop((client_addr, message.job_id))
-            job[-1] = None
+            self._logger.info("Attempting to kill job %s found in the waiting-queue, action requested by client %s.", str(message.job_id), str(client_addr))
 
             # Do not forget to send a JobDone
             await ZMQUtils.send_with_addr(self._client_socket, client_addr, BackendJobDone(message.job_id, ("killed", "You killed the job"),
@@ -131,6 +134,8 @@ class Backend(object):
         # If the job is running, transmit the info to the agent
         elif (client_addr, message.job_id) in self._job_running:
             agent_addr = self._job_running[(client_addr, message.job_id)][0]
+            self._logger.info("Attempting to kill job %s already running on agent, action requested by client %s.", str(message.job_id), str(agent_addr), str(client_addr))
+
             await ZMQUtils.send_with_addr(self._agent_socket, agent_addr, BackendKillJob((client_addr, message.job_id)))
         else:
             self._logger.warning("Client %s attempted to kill unknown job %s", str(client_addr), str(message.job_id))
@@ -172,7 +177,9 @@ class Backend(object):
 
             # Killed job, removing it from the mapping
             if not job_msg:
-                del self._waiting_jobs[(client_addr, job_id)]
+                j = self._waiting_jobs.pop((client_addr, job_id), None)
+                if j is None:
+                    self._logger.warning("Killed job id %s was not present in the waiting queue and it should.", str(job_id))
                 continue
 
             # Find agents that can run this job
@@ -182,7 +189,7 @@ class Backend(object):
             if not possible_agents:
                 job = (priority+1, insert_time, client_addr, job_id, job_msg)
                 self._waiting_jobs_pq.put(job)
-                self._logger.warning("No agent for job id %s, putting it back in the queue.", job_id)
+                self._logger.warning("No agent for job id %s, putting it back in the queue.", str(job_id))
                 continue
 
             # Agent chosen, removing it from availability list
@@ -190,12 +197,17 @@ class Backend(object):
             self._available_agents.remove(agent_addr)
 
             # Remove the job from the queue
-            del self._waiting_jobs[(client_addr, job_id)]
+            j = self._waiting_jobs.pop((client_addr, job_id), None)
+            if j is None:
+                self._logger.warning("Job id %s is about to be sent to the agent %s but it was not present in the waiting queue and it should.", str(job_id), str(agent_addr))
 
             # Send the job to agent
             job_id = (client_addr, job_msg.job_id)
+            if job_id in self._job_running:
+                self._logger.warning("Job id %s is about to be sent to the agent %s but it already present in the running queue and it shouldnt.", str(job_id), str(agent_addr))
+
             self._job_running[job_id] = (agent_addr, job_msg, time.time())
-            self._logger.info("Sending job %s %s to agent %s", client_addr, job_msg.job_id, agent_addr)
+            self._logger.info("Sending job %s %s to agent %s", str(client_addr), str(job_msg.job_id), str(agent_addr))
             await ZMQUtils.send_with_addr(self._agent_socket, agent_addr, BackendNewJob(job_id, job_msg.course_id, job_msg.task_id,
                                                                                         job_msg.inputdata, job_msg.environment,
                                                                                         job_msg.enable_network, job_msg.time_limit,
@@ -207,7 +219,7 @@ class Backend(object):
         """
         Handle an AgentAvailable message. Add agent_addr to the list of available agents
         """
-        self._logger.info("Agent %s (%s) said hello", agent_addr, message.friendly_name)
+        self._logger.info("Agent %s (%s) said hello", str(agent_addr), str(message.friendly_name))
 
         if agent_addr in self._registered_agents:
             # Delete previous instance of this agent, if any
@@ -224,7 +236,7 @@ class Backend(object):
                 # check if the id is the same
                 if self._containers[container_name][0] == container_info["id"]:
                     # ok, just add the agent to the list of agents that have the container
-                    self._logger.info("Registering container %s for agent %s", container_name, str(agent_addr))
+                    self._logger.info("Registering container %s for agent %s", str(container_name), str(agent_addr))
                     self._containers[container_name][2].append(agent_addr)
                 elif self._containers[container_name][1] > container_info["created"]:
                     # containers stored have been created after the new one
@@ -249,7 +261,7 @@ class Backend(object):
                                                         self._containers[container_name][2] + [agent_addr])
             else:
                 # just add it
-                self._logger.info("Registering container %s for agent %s", container_name, str(agent_addr))
+                self._logger.info("Registering container %s for agent %s", str(container_name), str(agent_addr))
                 self._containers[container_name] = (container_info["id"], container_info["created"], [agent_addr])
 
         # update the queue
@@ -260,17 +272,19 @@ class Backend(object):
 
     async def handle_agent_job_started(self, agent_addr, message: AgentJobStarted):
         """Handle an AgentJobStarted message. Send the data back to the client"""
-        self._logger.info("Job %s %s started on agent %s", message.job_id[0], message.job_id[1], agent_addr)
+        self._logger.info("Job %s %s started on agent %s", str(message.job_id[0]), str(message.job_id[1]), str(agent_addr))
         await ZMQUtils.send_with_addr(self._client_socket, message.job_id[0], BackendJobStarted(message.job_id[1]))
 
     async def handle_agent_job_done(self, agent_addr, message: AgentJobDone):
         """Handle an AgentJobDone message. Send the data back to the client, and start new job if needed"""
 
         if agent_addr in self._registered_agents:
-            self._logger.info("Job %s %s finished on agent %s", message.job_id[0], message.job_id[1], agent_addr)
+            self._logger.info("Job %s %s finished on agent %s", str(message.job_id[0]), str(message.job_id[1]), str(agent_addr))
 
             # Remove the job from the list of running jobs
-            del self._job_running[message.job_id]
+            j = self._job_running.pop(message.job_id, None)
+            if j is None:
+                self._logger.warning("Job %s %s finished on agent %s but it was not present in the running queue and it should.", str(message.job_id), str(agent_addr))
 
             # Sent the data back to the client
             await ZMQUtils.send_with_addr(self._client_socket, message.job_id[0], BackendJobDone(message.job_id[1], message.result,
@@ -282,7 +296,7 @@ class Backend(object):
             # The agent is available now
             self._available_agents.append(agent_addr)
         else:
-            self._logger.warning("Job result %s %s from non-registered agent %s", message.job_id[0], message.job_id[1], agent_addr)
+            self._logger.warning("Job result %s %s from non-registered agent %s", str(message.job_id[0]), str(message.job_id[1]), str(agent_addr))
 
         # update the queue
         await self.update_queue()
@@ -330,7 +344,7 @@ class Backend(object):
             try:
                 ping_count = self._ping_count.get(agent_addr, 0)
                 if ping_count > 5:
-                    self._logger.warning("Agent %s (%s) does not respond: removing from list.", agent_addr, friendly_name)
+                    self._logger.warning("Agent %s (%s) does not respond: removing from list.", str(agent_addr), str(friendly_name))
                     delete_agent = True
                 else:
                     self._ping_count[agent_addr] = ping_count + 1
@@ -338,14 +352,14 @@ class Backend(object):
                     delete_agent = False
             except:
                 # This should not happen, but it's better to check anyway.
-                self._logger.exception("Failed to send ping to agent %s (%s). Removing it from list.", agent_addr, friendly_name)
+                self._logger.exception("Failed to send ping to agent %s (%s). Removing it from list.", str(agent_addr), str(friendly_name))
                 delete_agent = True
 
             if delete_agent:
                 try:
                     await self._delete_agent(agent_addr)
                 except:
-                    self._logger.exception("Failed to delete agent %s (%s)!", agent_addr, friendly_name)
+                    self._logger.exception("Failed to delete agent %s (%s)!", str(agent_addr), str(friendly_name))
 
         self._loop.call_later(1, self._create_safe_task, self._do_ping())
 

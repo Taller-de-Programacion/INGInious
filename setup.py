@@ -29,6 +29,8 @@ install_requires = [
     "psutil == 5.9.1",
     "zipstream == 1.1.4",
     "WsgiDAV == 2.2.4",
+    "requests == 2.26.0",
+    "urllib3 == 1.26.0"
 ]
 
 test_requires = [

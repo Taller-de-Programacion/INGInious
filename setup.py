@@ -28,7 +28,9 @@ install_requires = [
     "natsort == 8.1.0",
     "psutil == 5.9.1",
     "zipstream == 1.1.4",
-    "WsgiDAV == 2.2.4"
+    "WsgiDAV == 2.2.4",
+    "requests<2.2.29",
+    "urllib3 >= 1.26.0, < 2.0.0"
 ]
 
 test_requires = [

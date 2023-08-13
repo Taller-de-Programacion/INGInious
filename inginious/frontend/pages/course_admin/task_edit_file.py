@@ -15,6 +15,7 @@ from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
 
 class CourseTaskFiles(INGIniousAdminPage):
     """ Edit a task """
+    _logger = logging.getLogger("inginious.webapp.course_admin.task_edit_file")
 
     def GET_AUTH(self, courseid, taskid):  # pylint: disable=arguments-differ
         """ Edit a task """
@@ -137,6 +138,7 @@ class CourseTaskFiles(INGIniousAdminPage):
             content = self.task_factory.get_task_fs(courseid, taskid).get(wanted_path).decode("utf-8")
             return json.dumps({"content": content})
         except:
+            self._logger.exception("action_edit failed (%s, %s, %s)", courseid, taskid, path)
             return json.dumps({"error": "not-readable"})
 
     def action_edit_save(self, courseid, taskid, path, content):
@@ -148,6 +150,7 @@ class CourseTaskFiles(INGIniousAdminPage):
             self.task_factory.get_task_fs(courseid, taskid).put(wanted_path, content.encode("utf-8"))
             return json.dumps({"ok": True})
         except:
+            self._logger.exception("action_edit_save failed (%s, %s, %s)", courseid, taskid, path)
             return json.dumps({"error": True})
 
     def action_upload(self, courseid, taskid, path, fileobj):
@@ -164,6 +167,7 @@ class CourseTaskFiles(INGIniousAdminPage):
         try:
             task_fs.put(wanted_path, fileobj.file.read())
         except:
+            self._logger.exception("action_upload failed (%s, %s, %s)", courseid, taskid, path)
             return self.show_tab_file(courseid, taskid, _("An error occurred while writing the file"))
         return self.show_tab_file(courseid, taskid)
 
@@ -209,6 +213,7 @@ class CourseTaskFiles(INGIniousAdminPage):
             self.task_factory.get_task_fs(courseid, taskid).move(old_path, wanted_path)
             return self.show_tab_file(courseid, taskid)
         except:
+            self._logger.exception("action_rename failed (%s, %s, %s, %s)", courseid, taskid, path, new_path)
             return self.show_tab_file(courseid, taskid, _("An error occurred while moving the files"))
 
     def action_delete(self, courseid, taskid, path):
@@ -230,6 +235,7 @@ class CourseTaskFiles(INGIniousAdminPage):
             self.task_factory.get_task_fs(courseid, taskid).delete(wanted_path)
             return self.show_tab_file(courseid, taskid)
         except:
+            self._logger.exception("action_delete failed (%s, %s, %s)", courseid, taskid, path)
             return self.show_tab_file(courseid, taskid, _("An error occurred while deleting the files"))
 
     def action_download(self, courseid, taskid, path):

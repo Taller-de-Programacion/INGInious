@@ -14,6 +14,7 @@ from inginious.frontend.pages.course_admin.utils import make_csv, INGIniousAdmin
 
 class CourseAggregationListPage(INGIniousAdminPage):
     """ Course administration page: list of aggregations """
+    _logger = logging.getLogger("inginious.webapp.aggregation_list")
 
     def GET_AUTH(self, courseid):  # pylint: disable=arguments-differ
         """ GET request """
@@ -73,6 +74,7 @@ class CourseAggregationListPage(INGIniousAdminPage):
                 msg = _("You have no rights to add/change classrooms")
                 error = True
         except:
+            self._logger.exception("POST failed")
             msg = _('User returned an invalid form.')
             error = True
 

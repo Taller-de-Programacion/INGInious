@@ -146,6 +146,7 @@ class DockerAgent(Agent):
                         except asyncio.CancelledError:
                             raise
                         except:  # this call can sometimes fail, and that is normal.
+                            self._logger.exception("_create_safe_task failed (sometimes happen) for container %s", container_id)
                             pass
                 else:
                     raise TypeError(str(i))

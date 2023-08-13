@@ -12,6 +12,7 @@ from inginious.frontend.pages.course_admin.utils import make_csv, INGIniousAdmin
 
 class CourseStudentListPage(INGIniousAdminPage):
     """ Course administration page: list of registered students """
+    _logger = logging.getLogger("inginious.frontend.student_list")
 
     def GET_AUTH(self, courseid):  # pylint: disable=arguments-differ
         """ GET request """
@@ -34,11 +35,13 @@ class CourseStudentListPage(INGIniousAdminPage):
                 else:
                     self.user_manager.course_unregister_user(course, data["username"])
             except:
+                self._logger.exception("remove failed")
                 pass
         elif "register" in data:
             try:
                 self.user_manager.course_register_user(course, data["username"].strip(), '', True)
             except:
+                self._logger.exception("register failed")
                 pass
         return self.page(course)
 

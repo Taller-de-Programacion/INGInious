@@ -17,6 +17,7 @@ from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
 
 class CourseEditClassroom(INGIniousAdminPage):
     """ Edit a task """
+    _logger = logging.getLogger("inginious.webapp.classroom_edit")
 
     def get_user_lists(self, course, classroomid):
         """ Get the available student and tutor lists for classroom edition"""
@@ -190,6 +191,7 @@ class CourseEditClassroom(INGIniousAdminPage):
                                                                                        other_students, users_info,
                                                                                        classroom, msg, error)
             except:
+                self._logger.exception("POST failed")
                 msg = _('An error occurred while parsing the data.')
                 error = True
 

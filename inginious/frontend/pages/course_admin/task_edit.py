@@ -38,6 +38,7 @@ class CourseEditTask(INGIniousAdminPage):
         try:
             task_data = self.task_factory.get_task_descriptor_content(courseid, taskid)
         except:
+            self._logger.exception("maybe and error when running get_task_descriptor_content (%s, %s)", courseid, taskid)
             task_data = None
         if task_data is None:
             task_data = {}
@@ -48,6 +49,7 @@ class CourseEditTask(INGIniousAdminPage):
         try:
             current_filetype = self.task_factory.get_task_descriptor_extension(courseid, taskid)
         except:
+            self._logger.exception("maybe and error when running get_task_descriptor_extension (%s, %s)", courseid, taskid)
             pass
         available_filetypes = self.task_factory.get_available_task_file_extensions()
 
@@ -223,6 +225,7 @@ class CourseEditTask(INGIniousAdminPage):
         try:
             course = self.course_factory.get_course(courseid)
         except:
+            self._logger.exception("course_factory.get_course %s failed", courseid)
             return json.dumps({"status": "error", "message": _("Error while reading course's informations")})
 
         # Get original data
@@ -230,6 +233,7 @@ class CourseEditTask(INGIniousAdminPage):
             orig_data = self.task_factory.get_task_descriptor_content(courseid, taskid)
             data["order"] = orig_data["order"]
         except:
+            self._logger.exception("task_factory.get_task_descriptor_content (%s, %s) failed", courseid, taskid)
             pass
 
         task_fs = self.task_factory.get_task_fs(courseid, taskid)

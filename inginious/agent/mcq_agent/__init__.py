@@ -44,7 +44,7 @@ class MCQAgent(Agent):
         except asyncio.CancelledError:
             raise
         except Exception as e:
-            self._logger.error("Task %s/%s not available on this agent", msg.course_id, msg.task_id)
+            self._logger.exception("Task %s/%s not available on this agent", msg.course_id, msg.task_id)
             raise CannotCreateJobException("Task is not available on this agent")
 
         language = msg.inputdata.get("@lang", "")

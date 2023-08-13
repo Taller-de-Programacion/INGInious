@@ -19,6 +19,7 @@ from inginious.common.base import id_checker
 
 class CourseSubmissionsPage(INGIniousAdminPage):
     """ List information about a task done by a student """
+    _logger = logging.getLogger("inginious.webapp.course_admin_submissions")
 
     _allowed_sort = ["submitted_on", "username", "grade", "taskid"]
     _allowed_sort_name = [_("Submitted on"), _("User"), _("Grade"), _("Task id")]
@@ -34,14 +35,14 @@ class CourseSubmissionsPage(INGIniousAdminPage):
         if "replay" in web.input():
             if not self.user_manager.has_admin_rights_on_course(course):
                 raise web.notfound()
-            
+
             input = self.get_input()
             tasks = course.get_tasks()
             data, __ = self.get_submissions(course, input)
             for submission in data:
                 self.submission_manager.replay_job(tasks[submission["taskid"]], submission)
             msgs.append(_("{0} selected submissions were set for replay.").format(str(len(data))))
-            
+
         return self.page(course, msgs)
 
     def GET_AUTH(self, courseid):  # pylint: disable=arguments-differ
@@ -56,7 +57,7 @@ class CourseSubmissionsPage(INGIniousAdminPage):
     def page(self, course, msgs=None):
         """ Get all data and display the page """
         msgs = msgs if msgs else []
-        
+
         user_input = self.get_input()
         data, classroom = self.get_submissions(course, user_input)  # ONLY classrooms user wants to query
         if len(data) == 0 and not self.show_collapse(user_input):
@@ -72,7 +73,7 @@ class CourseSubmissionsPage(INGIniousAdminPage):
 
         if "csv" in web.input():
             return make_csv(data)
-                        
+
         if "download" in web.input():
             # Tweak if not using classrooms : classroom['students'] may content ungrouped users
             aggregations = dict([(username,
@@ -95,7 +96,7 @@ class CourseSubmissionsPage(INGIniousAdminPage):
 
         if user_input.limit != '' and user_input.limit.isdigit():
             data = data[:int(user_input.limit)]
-            
+
         if len(data) > self._trunc_limit:
             msgs.append(_("The result contains more than {0} submissions. The displayed submissions are truncated.\n").format(self._trunc_limit))
             data = data[:self._trunc_limit]
@@ -113,7 +114,7 @@ class CourseSubmissionsPage(INGIniousAdminPage):
         users = OrderedDict(sorted(list(self.user_manager.get_users_info(self.user_manager.get_course_registered_users(course)).items()),
             key=lambda k: k[1][0] if k[1] is not None else ""))
         return users
-        
+
     def get_submissions(self, course, user_input):
         """ Returns the list of submissions and corresponding aggragations based on inputs """
 
@@ -122,7 +123,7 @@ class CourseSubmissionsPage(INGIniousAdminPage):
         classroom = list(self.database.aggregations.find({"_id": {"$in": list_classroom_id}}))
         more_username = [s["students"] for s in classroom]  # Extract usernames of students
         more_username = [y for x in more_username for y in x]  # Flatten lists
-        
+
         # Get tasks based on categories
         categories = set(user_input.org_tags)
         more_tasks = [taskid for taskid, task in course.get_tasks().items() if categories.intersection(task.get_categories())]
@@ -154,17 +155,18 @@ class CourseSubmissionsPage(INGIniousAdminPage):
             elif date_before and date_after:
                 query_advanced["submitted_on"] = {"$gte": date_after, "$lte": date_before}
         except ValueError:  # If match of datetime.strptime() fails
+            self._logger.exception("get_submissions failed")
             pass
-        
+
         # Query with tags
         if len(user_input.filter_tags) == len(user_input.filter_tags_presence):
             for i in range(0, len(user_input.filter_tags)):
                 if id_checker(user_input.filter_tags[i]):
                     state = (user_input.filter_tags_presence[i] in ["True", "true"])
                     query_advanced["tests." + user_input.filter_tags[i]] = {"$in": [None, False]} if not state else True
-            
+
         # Mongo operations
-        data = list(self.database.submissions.find({**query_base, **query_advanced}).sort([(user_input.sort_by, 
+        data = list(self.database.submissions.find({**query_base, **query_advanced}).sort([(user_input.sort_by,
             pymongo.DESCENDING if user_input.order == "0" else pymongo.ASCENDING)]))
         data = [dict(list(f.items()) + [("url", self.submission_url_generator(str(f["_id"])))]) for f in data]
 
@@ -211,4 +213,4 @@ class CourseSubmissionsPage(INGIniousAdminPage):
             if d != '' and not d.isdigit():
                 raise web.notfound()
 
-        return user_input 
+        return user_input

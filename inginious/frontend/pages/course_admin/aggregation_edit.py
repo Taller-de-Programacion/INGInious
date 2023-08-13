@@ -17,6 +17,7 @@ from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
 
 class CourseEditAggregation(INGIniousAdminPage):
     """ Edit a task """
+    _logger = logging.getLogger("inginious.webapp.course_admin_aggregation_edit")
 
     def get_user_lists(self, course, aggregationid=''):
         """ Get the available student and tutor lists for aggregation edition"""
@@ -234,6 +235,7 @@ class CourseEditAggregation(INGIniousAdminPage):
             elif not error:
                 msg = _("Classroom updated.") if course.use_classrooms() else _("Teams updated.")
         except:
+            self._logger.exception("POST failed")
             msg = _('An error occurred while parsing the data.')
             error = True
 

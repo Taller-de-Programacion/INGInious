@@ -12,6 +12,7 @@ from inginious.frontend.pages.course_admin.utils import make_csv, INGIniousAdmin
 
 class CourseTaskListPage(INGIniousAdminPage):
     """ List informations about all tasks """
+    _logger = logging.getLogger("inginious.webapp.course_admin.task_list")
 
     def GET_AUTH(self, courseid):  # pylint: disable=arguments-differ
         """ GET request """
@@ -31,6 +32,7 @@ class CourseTaskListPage(INGIniousAdminPage):
                     task["order"] = index
                     self.task_factory.update_task_descriptor_content(courseid, taskid, task)
                 except:
+                    self._logger.exception("POST failed (%s, %s)", courseid, taskid)
                     pass
 
         return self.page(course)

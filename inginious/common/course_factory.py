@@ -74,8 +74,8 @@ class CourseFactory(object):
 
     def get_course_fs(self, courseid):
         """
-        :param courseid: 
-        :return: a FileSystemProvider pointing to the directory of the course 
+        :param courseid:
+        :return: a FileSystemProvider pointing to the directory of the course
         """
         if not id_checker(courseid):
             raise InvalidNameException("Course with invalid name: " + courseid)
@@ -166,6 +166,7 @@ class CourseFactory(object):
                     if translations_fs.exists(lang + ".mo"):
                         last_update["$i18n/" + lang + ".mo"] = translations_fs.get_last_modification_time(lang + ".mo")
         except:
+            get_course_logger(courseid).warning("_cache_update_needed failed", exc_info=True)
             raise CourseNotFoundException()
 
         last_modif = self._cache[courseid][1]

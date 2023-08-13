@@ -74,6 +74,11 @@ class MyCoursesPage(INGIniousAuthPage):
                 submission["task"] = open_courses[submission['courseid']].get_task(submission['taskid'])
                 except_free_last_submissions.append(submission)
             except:
+                self.logger.error("show_page (mycourses) failed when iterating %s last_submissions for user %s. Submission: %s",
+                        len(last_submissions),
+                        username,
+                        repr(submission)
+                        )
                 pass
 
         registerable_courses = {courseid: course for courseid, course in all_courses.items() if

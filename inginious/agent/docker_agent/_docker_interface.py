@@ -24,7 +24,7 @@ class DockerInterface(object):  # pragma: no cover
     @property
     def _docker(self):
         return docker.from_env()
-    
+
     def get_containers(self):
         """
         :return: a dict of available containers in the form
@@ -83,6 +83,7 @@ class DockerInterface(object):  # pragma: no cover
             container.remove(v=True, link=False, force=True)
             return answer
         except:
+            logging.getLogger("inginious.agent").exception("get_host_ip failed")
             return None
 
     def create_container(self, environment, network_grading, mem_limit, task_path, sockets_path,

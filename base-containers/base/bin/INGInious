@@ -249,6 +249,7 @@ class INGIniousMainRunner(object):
                         open(filename, 'wb').write(d["value"])
                         d["value"] = filename
                 except:
+                    self._logger.exception("write_inputdata failed")
                     pass
 
         f = open('/.__input/__inputdata.json', 'w')

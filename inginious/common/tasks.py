@@ -42,9 +42,9 @@ class Task(object):
                 self._limits['disk'] = int(self._data["limits"].get("disk", 1024))
 
                 if self._limits['time'] <= 0 or self._limits['hard_time'] <= 0 or self._limits['memory'] <= 0 or self._limits['disk'] <= 0:
-                    raise Exception("Invalid limit")
+                    raise Exception("Invalid limit %s" % repr(self._limits))
             except:
-                raise Exception("Invalid limit")
+                raise Exception("Invalid limit %s" % repr(self._limits))
 
         if "problems" not in self._data:
             raise Exception("Tasks must have some problems descriptions")

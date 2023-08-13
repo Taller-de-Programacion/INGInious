@@ -120,6 +120,7 @@ class RegistrationPage(INGIniousPage):
                                 )
                         msg = _("You are succesfully registered. An administrator will approve your request soon.")
                 except:
+                    self.logger.exception("register_user failed")
                     error = True
                     msg = _("Something went wrong while sending you activation email. Please contact the administrator.")
 
@@ -162,6 +163,7 @@ class RegistrationPage(INGIniousPage):
                                 )
                         msg = _("An administrator will approve your request soon.")
                 except:
+                    self.logger.exception("lost_passwd failed")
                     error = True
                     msg = _("Something went wrong while sending you reset email. Please contact the administrator.")
 

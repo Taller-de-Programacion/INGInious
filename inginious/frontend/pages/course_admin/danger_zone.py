@@ -154,6 +154,7 @@ class CourseDangerZonePage(INGIniousAdminPage):
                     self.dump_course(courseid)
                     msg = _("All course data have been deleted.")
                 except:
+                    self._logger.exception("wipeall failed")
                     msg = _("An error occurred while dumping course from database.")
                     error = True
         elif "restore" in data:
@@ -166,6 +167,7 @@ class CourseDangerZonePage(INGIniousAdminPage):
                     self.restore_course(courseid, data["backupdate"])
                     msg = _("Course restored to date : {}.").format(dt.strftime("%Y-%m-%d %H:%M:%S"))
                 except:
+                    self._logger.exception("restore failed")
                     msg = _("An error occurred while restoring backup.")
                     error = True
         elif "deleteall" in data:
@@ -177,6 +179,7 @@ class CourseDangerZonePage(INGIniousAdminPage):
                     self.delete_course(courseid)
                     web.seeother(self.app.get_homepath() + '/index')
                 except:
+                    self._logger.exception("deleteall failed")
                     msg = _("An error occurred while deleting the course data.")
                     error = True
 
@@ -193,6 +196,7 @@ class CourseDangerZonePage(INGIniousAdminPage):
                     dt = datetime.datetime.strptime(basename, "%Y%m%d.%H%M%S").strftime("%Y-%m-%d %H:%M:%S")
                     backups.append({"file": basename, "date": dt})
                 except:  # Wrong format
+                    self._logger.exception("get_backup_list failed")
                     pass
 
         return backups

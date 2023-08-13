@@ -328,6 +328,7 @@ class Backend(object):
                     await self.handle_client_message(client_addr, message)
 
         except asyncio.CancelledError:
+            self._logger.exception("Backend cancelled.")
             return
         except KeyboardInterrupt:
             return

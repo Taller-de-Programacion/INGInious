@@ -53,15 +53,15 @@ if custom_str:
         custom_str = custom_str.split(':')
         custom_name = custom_str[0]
         custom_str = ":".join(custom_str[1:])
-    except:
-        print("Invalid value for --custom(-json)")
+    except Exception as err:
+        print("Invalid value for --custom(-json):", str(err))
         exit(1)
 
     if custom_json:
         try:
             custom_str = json.loads(custom_str)
-        except:
-            print("Cannot decode json. Invalid value for --custom-json")
+        except Exception as err:
+            print("Cannot decode json. Invalid value for --custom-json:", str(err))
             exit(1)
     else: # try to convert to int/float if possible
         try:

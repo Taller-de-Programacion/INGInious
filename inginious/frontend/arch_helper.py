@@ -37,10 +37,12 @@ def _run_asyncio(loop, zmq_context):
     :param zmq_context:
     :return:
     """
+    logger = logging.getLogger("inginious.frontend")
     try:
         asyncio.set_event_loop(loop)
         loop.run_forever()
     except:
+        logger.exception("_run_asyncio failed")
         pass
     finally:
         loop.close()

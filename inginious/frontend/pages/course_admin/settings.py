@@ -13,6 +13,7 @@ from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
 
 class CourseSettings(INGIniousAdminPage):
     """ Couse settings """
+    _logger = logging.getLogger("inginious.webapp.course_admin_settings")
 
     def GET_AUTH(self, courseid):  # pylint: disable=arguments-differ
         """ GET request """
@@ -93,6 +94,7 @@ class CourseSettings(INGIniousAdminPage):
 
             course_content['lti_send_back_grade'] = 'lti_send_back_grade' in data and data['lti_send_back_grade'] == "true"
         except:
+            self._logger.exception("POST failed")
             errors.append(_('User returned an invalid form.'))
 
         if len(errors) == 0:

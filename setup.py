@@ -14,7 +14,7 @@ import inginious
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
 install_requires = [
-    "docker==6.0.0",
+    "docker==6.1.0",
     "docutils>=0.14, <0.18",
     "pymongo==3.12.3",
     "PyYAML==3.13",

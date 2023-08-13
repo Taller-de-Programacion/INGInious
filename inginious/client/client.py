@@ -285,7 +285,7 @@ class Client(BetterParanoidPirateClient):
 
         environment = task.get_environment()
         if environment not in self._available_containers:
-            self._logger.warning("Env %s not available for task %s/%s", environment, task.get_course_id(), task.get_id())
+            self._logger.warning("Env %s not available for task %s/%s: %s", environment, task.get_course_id(), task.get_id(), repr(self._available_containers))
             ssh_callback(None, None, None)  # ssh_callback must be called once
             callback(("crash", "Environment not available."), 0.0, {}, {}, "", {}, None, "", "")
             return

@@ -13,6 +13,7 @@ from pymongo import ReturnDocument
 
 from inginious.common import custom_yaml
 from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage
+import logging
 
 
 class CourseEditAggregation(INGIniousAdminPage):

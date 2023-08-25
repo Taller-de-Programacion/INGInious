@@ -6,6 +6,7 @@
 from collections import OrderedDict
 
 import web
+import logging
 
 from inginious.frontend.pages.course_admin.utils import make_csv, INGIniousAdminPage
 

@@ -7,6 +7,7 @@
 import gettext
 
 from inginious.common.base import id_checker
+import logging
 
 
 class Task(object):

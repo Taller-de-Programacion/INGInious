@@ -6,6 +6,7 @@
 """ Pages that allow editing of tasks """
 
 import json
+import logging
 
 import web
 from bson.objectid import ObjectId

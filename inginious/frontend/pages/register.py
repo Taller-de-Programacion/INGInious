@@ -10,6 +10,7 @@ import random
 import re
 
 import web
+import logging
 
 from inginious.frontend.pages.utils import INGIniousPage
 

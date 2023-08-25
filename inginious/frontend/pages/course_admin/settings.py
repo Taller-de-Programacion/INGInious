@@ -6,6 +6,7 @@
 import re
 
 import web
+import logging
 
 from inginious.frontend.accessible_time import AccessibleTime
 from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage

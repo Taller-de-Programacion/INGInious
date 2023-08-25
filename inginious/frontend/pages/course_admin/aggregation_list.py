@@ -10,6 +10,7 @@ from bson.objectid import ObjectId
 
 import inginious.common.custom_yaml as yaml
 from inginious.frontend.pages.course_admin.utils import make_csv, INGIniousAdminPage
+import logging
 
 
 class CourseAggregationListPage(INGIniousAdminPage):

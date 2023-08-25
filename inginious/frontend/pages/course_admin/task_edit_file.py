@@ -8,6 +8,7 @@ import json
 import os.path
 
 import web
+import logging
 
 from inginious.common.base import id_checker
 from inginious.frontend.pages.course_admin.utils import INGIniousAdminPage

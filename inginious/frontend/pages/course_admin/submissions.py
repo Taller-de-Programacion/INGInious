@@ -7,6 +7,7 @@ import pymongo
 import web
 import re
 import itertools
+import logging
 import gettext
 from datetime import datetime
 from bson.objectid import ObjectId

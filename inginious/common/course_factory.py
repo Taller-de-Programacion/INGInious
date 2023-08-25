@@ -12,6 +12,7 @@ from inginious.common.task_factory import TaskFactory
 from inginious.common.tasks import Task
 from inginious.common.hook_manager import HookManager
 from inginious.common.exceptions import InvalidNameException, CourseNotFoundException, CourseUnreadableException, CourseAlreadyExistsException
+import logging
 
 
 class CourseFactory(object):

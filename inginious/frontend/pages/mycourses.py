@@ -8,6 +8,7 @@ from collections import OrderedDict
 
 import web
 import traceback
+import logging
 
 from inginious.frontend.pages.utils import INGIniousAuthPage
 

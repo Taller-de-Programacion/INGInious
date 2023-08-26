@@ -159,7 +159,6 @@ class FileProblem(Problem):
         self._header = content['header'] if "header" in content else ""
         self._max_size = content.get("max_size", None)
         self._allowed_exts = content.get("allowed_exts", None)
-        self._optional = content.get("optional", False)
 
     def input_type(self):
         return dict
@@ -191,10 +190,6 @@ class FileProblem(Problem):
         if not str(self.get_id()) in task_input:
             return False
         try:
-            if self._optional:
-                task_input[self.get_id()] =  {"filename": "not-a-zip.txt", "value": "not-a-zip"}
-                return True
-
             if not task_input[self.get_id()]["filename"].endswith(tuple(self._allowed_exts or default_allowed_extension)):
                 return False
 

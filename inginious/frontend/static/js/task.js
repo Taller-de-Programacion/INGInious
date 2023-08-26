@@ -275,31 +275,31 @@ function taskFormValid()
     {
         var filename = $(this).val().split(/(\\|\/)/g).pop();
 
-        //file input fields cannot be optional
+        //file input fields can be optional (A HACK)
         if(filename == "")
         {
-            answered_to_all = false;
-            return;
+            // a hack
+        } else {
+
+            //verify ext
+            var allowed_extensions = $.parseJSON($(this).attr('data-allowed-exts'));
+            var has_one = false;
+            $.each(allowed_extensions, function(idx, ext){
+                has_one = has_one || (filename.lastIndexOf(ext) === filename.length - ext.length) > 0;
+            });
+            if(!has_one)
+                errors.push($("#invalidext").text().replace("{}", filename));
+
+            //try to get the size of the file
+            var size = -1;
+            try { size = $(this)[0].files[0].size; } catch (e) {} //modern browsers
+            if(size == -1) try { size = $(this)[0].files[0].fileSize; } catch(e) { } //old versions of Firefox
+
+            //Verify the maximum size
+            var max_size = parseInt($(this).attr('data-max-size'));
+            if(size != -1 && size > max_size)
+                errors.push($("#filetooheavy").text().replace("{}", filename));
         }
-
-        //verify ext
-        var allowed_extensions = $.parseJSON($(this).attr('data-allowed-exts'));
-        var has_one = false;
-        $.each(allowed_extensions, function(idx, ext){
-            has_one = has_one || (filename.lastIndexOf(ext) === filename.length - ext.length) > 0;
-        });
-        if(!has_one)
-            errors.push($("#invalidext").text().replace("{}", filename));
-
-        //try to get the size of the file
-        var size = -1;
-        try { size = $(this)[0].files[0].size; } catch (e) {} //modern browsers
-        if(size == -1) try { size = $(this)[0].files[0].fileSize; } catch(e) { } //old versions of Firefox
-
-        //Verify the maximum size
-        var max_size = parseInt($(this).attr('data-max-size'));
-        if(size != -1 && size > max_size)
-            errors.push($("#filetooheavy").text().replace("{}", filename));
     });
 
     if(!answered_to_all)

@@ -134,7 +134,7 @@ class Backend(object):
         # If the job is running, transmit the info to the agent
         elif (client_addr, message.job_id) in self._job_running:
             agent_addr = self._job_running[(client_addr, message.job_id)][0]
-            self._logger.info("Attempting to kill job %s already running on agent, action requested by client %s.", str(message.job_id), str(agent_addr), str(client_addr))
+            self._logger.info("Attempting to kill job %s already running on agent %s, action requested by client %s.", str(message.job_id), str(agent_addr), str(client_addr))
 
             await ZMQUtils.send_with_addr(self._agent_socket, agent_addr, BackendKillJob((client_addr, message.job_id)))
         else:
@@ -242,8 +242,8 @@ class Backend(object):
                     # containers stored have been created after the new one
                     # add the agent, but emit a warning
                     self._logger.warning("Container %s has multiple version: \n"
-                                         "\t Currently registered agents have version %s (%i)\n"
-                                         "\t New agent %s has version %s (%i)",
+                                         "\t Currently registered agents have version %s (%s)\n"
+                                         "\t New agent %s has version %s (%s)",
                                          container_name,
                                          self._containers[container_name][0], self._containers[container_name][1],
                                          str(agent_addr), container_info["id"], container_info["created"])
@@ -252,8 +252,8 @@ class Backend(object):
                     # containers stored have been created before the new one
                     # add the agent, update the infos, and emit a warning
                     self._logger.warning("Container %s has multiple version: \n"
-                                         "\t Currently registered agents have version %s (%i)\n"
-                                         "\t New agent %s has version %s (%i)",
+                                         "\t Currently registered agents have version %s (%s)\n"
+                                         "\t New agent %s has version %s (%s)",
                                          container_name,
                                          self._containers[container_name][0], self._containers[container_name][1],
                                          str(agent_addr), container_info["id"], container_info["created"])
@@ -284,7 +284,7 @@ class Backend(object):
             # Remove the job from the list of running jobs
             j = self._job_running.pop(message.job_id, None)
             if j is None:
-                self._logger.warning("Job %s %s finished on agent %s but it was not present in the running queue and it should.", str(message.job_id), str(agent_addr))
+                self._logger.warning("Job %s finished on agent %s but it was not present in the running queue and it should.", str(message.job_id), str(agent_addr))
 
             # Sent the data back to the client
             await ZMQUtils.send_with_addr(self._client_socket, message.job_id[0], BackendJobDone(message.job_id[1], message.result,

@@ -47,7 +47,7 @@ class DockerInterface(object):  # pragma: no cover
                 if x.labels.get("org.inginious.grading.agent_version") != str(DOCKER_AGENT_VERSION):
                     logging.getLogger("inginious.agent").warning(
                         "Container %s is made for an old/newer version of the docker agent (container version is %s, "
-                        "but it should be %i). INGInious will ignore the container.", title,
+                        "but it should be %s). INGInious will ignore the container.", title,
                         str(x.labels.get("org.inginious.grading.agent_version")), DOCKER_AGENT_VERSION)
                     continue
 

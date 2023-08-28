@@ -88,7 +88,7 @@ class TimeoutWatcher(object):
         :return:
         """
         if container_id in self._watching:
-            self._logger.info("Killing container %s as it used its %i wall time seconds",
+            self._logger.info("Killing container %s as it used its %s wall time seconds",
                               container_id, hard_timeout)
             await self._kill_it_with_fire(container_id)
 

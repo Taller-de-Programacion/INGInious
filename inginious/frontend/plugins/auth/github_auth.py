@@ -18,21 +18,36 @@ authorization_base_url = 'https://github.com/login/oauth/authorize'
 token_url = 'https://github.com/login/oauth/access_token'
 scope = ["user:email"]
 
+# A HACK: make the http://... into https://
+# This is required because ingi server (http) runs behind a proxy (https)
+# and for some reason either the proxy is not sending that hint to ingi that
+# the public server is https or ingi is ingoring that.
+force_https = True
+
 class GithubAuthMethod(AuthMethod):
     """
     Github auth method
     """
+    def get_home_for_redirect_url(self):
+        home = web.ctx.home
+        if force_https and home.startswith('http://'):
+            home = 'https://' + home[7:]
+
+        return home
+
     def get_auth_link(self, auth_storage, share=False):
-        github = OAuth2Session(self._client_id, scope=scope,  redirect_uri=web.ctx.home + self._callback_page)
+        home = self.get_home_for_redirect_url()
+        github = OAuth2Session(self._client_id, scope=scope,  redirect_uri=home + self._callback_page)
         authorization_url, state = github.authorization_url(authorization_base_url)
         auth_storage["oauth_state"] = state
         return authorization_url
 
     def callback(self, auth_storage):
-        github = OAuth2Session(self._client_id, state=auth_storage["oauth_state"],  redirect_uri=web.ctx.home + self._callback_page)
+        home = self.get_home_for_redirect_url()
+        github = OAuth2Session(self._client_id, state=auth_storage["oauth_state"],  redirect_uri=home + self._callback_page)
         try:
             github.fetch_token(token_url, client_secret=self._client_secret,
-                               authorization_response=web.ctx.home + web.ctx.fullpath)
+                               authorization_response=home + web.ctx.fullpath)
             r = github.get('https://api.github.com/user')
             profile = json.loads(r.content.decode('utf-8'))
             r = github.get('https://api.github.com/user/emails')

@@ -453,7 +453,7 @@ function waitForSubmission(submissionid)
                 updateTaskStatus("Failed", 0);
                 unblurTaskForm();
             });
-    }, 10000);
+    }, 20000);
 }
 
 //Kill a running submission

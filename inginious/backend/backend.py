@@ -128,6 +128,15 @@ class Backend(object):
 
         return hang_detected
 
+    def auto_abort_if_job_is_hang(self):
+        if self.check_if_job_is_hang_and_log():
+            if not self.auto_aborting:
+                self.auto_aborting = True
+                os.kill(os.getpid(), 2)
+                return True
+
+        return False
+
     async def handle_client_new_job(self, client_addr, message: ClientNewJob):
         """ Handle an ClientNewJob message. Add a job to the queue and triggers an update """
         self._logger.info("Adding a new job %s %s to the queue", str(client_addr), str(message.job_id))
@@ -136,12 +145,9 @@ class Backend(object):
         if (client_addr, message.job_id) in self._waiting_jobs:
             self._logger.warning("Adding a new job %s %s to the queue but the job is already there!", str(client_addr), str(message.job_id))
 
-        if self.check_if_job_is_hang_and_log():
-            if not self.auto_aborting:
-                self.auto_aborting = True
-                os.kill(os.getpid(), 2)
-                time.sleep(5)
-                raise Exception("Queue full, retry later")
+        if self.auto_abort_if_job_is_hang():
+            time.sleep(2)
+            raise Exception("Queue full, retry later")
 
         self._waiting_jobs[(client_addr, message.job_id)] = job
         self._waiting_jobs_pq.put(job)
@@ -392,6 +398,7 @@ class Backend(object):
                 except:
                     self._logger.exception("Failed to delete agent %s (%s)!", str(agent_addr), str(friendly_name))
 
+        self.auto_abort_if_job_is_hang()
         self._loop.call_later(1, self._create_safe_task, self._do_ping())
 
     async def _delete_agent(self, agent_addr):

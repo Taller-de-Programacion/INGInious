@@ -136,7 +136,7 @@ class Backend(object):
         if (client_addr, message.job_id) in self._waiting_jobs:
             self._logger.warning("Adding a new job %s %s to the queue but the job is already there!", str(client_addr), str(message.job_id))
 
-        if check_if_job_is_hang_and_log():
+        if self.check_if_job_is_hang_and_log():
             if not self.auto_aborting:
                 self.auto_aborting = True
                 os.kill(os.getpid(), 2)

@@ -112,5 +112,6 @@ if __name__ == "__main__":
     try:
         server.start()
     except KeyboardInterrupt:
+        logging.info("KeyboardInterrupt / SIGINT received: shutting down....")
         server.stop()
 

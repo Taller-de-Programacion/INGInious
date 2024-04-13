@@ -7,6 +7,7 @@ import logging
 import queue
 import time
 import zmq
+import os
 from zmq.asyncio import Poller
 
 from inginious.common.message_meta import ZMQUtils
@@ -34,6 +35,8 @@ class Backend(object):
         # Enable support for ipv6
         self._agent_socket.ipv6 = True
         self._client_socket.ipv6 = True
+
+        self.auto_aborting = False
 
         self._poller = Poller()
         self._poller.register(self._agent_socket, zmq.POLLIN)
@@ -106,6 +109,25 @@ class Backend(object):
         """ Handle an Ping message. Pong the client """
         await ZMQUtils.send_with_addr(self._client_socket, client_addr, Pong())
 
+    def check_if_job_is_hang_and_log(self):
+        if not self._job_running:
+            return False
+
+        hang_detected = False
+        for _, content in self._job_running.items():
+            what = content[1].course_id+"/"+content[1].task_id
+            start = int(content[2])
+            end = int(content[2])+content[1].time_limit
+
+            max_duration = end - start
+            now = time.time()
+
+            if end < now and now - end > (max_duration//4):
+                self._logger.error("[^][#] Running job hang. Task %s, start: %s, end: %s, now: %s, overdue: %s", what, str(start), str(end), str(now), str(now - end))
+                hang_detected = True
+
+        return hang_detected
+
     async def handle_client_new_job(self, client_addr, message: ClientNewJob):
         """ Handle an ClientNewJob message. Add a job to the queue and triggers an update """
         self._logger.info("Adding a new job %s %s to the queue", str(client_addr), str(message.job_id))
@@ -113,6 +135,13 @@ class Backend(object):
         job = (message.priority, time.time(), client_addr, message.job_id, message)
         if (client_addr, message.job_id) in self._waiting_jobs:
             self._logger.warning("Adding a new job %s %s to the queue but the job is already there!", str(client_addr), str(message.job_id))
+
+        if check_if_job_is_hang_and_log():
+            if not self.auto_aborting:
+                self.auto_aborting = True
+                os.kill(os.getpid(), 2)
+                time.sleep(5)
+                raise Exception("Queue full, retry later")
 
         self._waiting_jobs[(client_addr, message.job_id)] = job
         self._waiting_jobs_pq.put(job)
@@ -275,6 +304,7 @@ class Backend(object):
         self._logger.info("Job %s %s started on agent %s", str(message.job_id[0]), str(message.job_id[1]), str(agent_addr))
         await ZMQUtils.send_with_addr(self._client_socket, message.job_id[0], BackendJobStarted(message.job_id[1]))
 
+    # XXX this is the only method that does a pop from the _job_running queue
     async def handle_agent_job_done(self, agent_addr, message: AgentJobDone):
         """Handle an AgentJobDone message. Send the data back to the client, and start new job if needed"""
 

@@ -132,7 +132,7 @@ class Backend(object):
         if self.check_if_job_is_hang_and_log():
             if not self.auto_aborting:
                 self.auto_aborting = True
-                os.kill(os.getpid(), 2)
+                os.kill(os.getpid(), 15)
                 return True
 
         return False
@@ -144,10 +144,6 @@ class Backend(object):
         job = (message.priority, time.time(), client_addr, message.job_id, message)
         if (client_addr, message.job_id) in self._waiting_jobs:
             self._logger.warning("Adding a new job %s %s to the queue but the job is already there!", str(client_addr), str(message.job_id))
-
-        if self.auto_abort_if_job_is_hang():
-            time.sleep(2)
-            raise Exception("Queue full, retry later")
 
         self._waiting_jobs[(client_addr, message.job_id)] = job
         self._waiting_jobs_pq.put(job)

@@ -94,6 +94,7 @@ if 'PHP_FCGI_CHILDREN' in os.environ or 'SERVER_SOFTWARE' in os.environ:  # ligh
 if __name__ == "__main__":
     # Close the client when interrupting the app
     def close_app_signal():
+        logging.info("SIGINT/SIGTERM received: closing....")
         close_app_func()
         raise KeyboardInterrupt()
 

@@ -36,6 +36,7 @@ class Backend(object):
         self._agent_socket.ipv6 = True
         self._client_socket.ipv6 = True
 
+        self._start_time_ = time.time()
         self.auto_aborting = False
 
         self._poller = Poller()
@@ -116,6 +117,8 @@ class Backend(object):
         hang_detected = False
         for _, content in self._job_running.items():
             what = content[1].course_id+"/"+content[1].task_id
+            who = str(content[1].launcher)
+            what2 = str(content[1].inputdata)
             start = int(content[2])
             end = int(content[2])+content[1].time_limit
 
@@ -123,7 +126,7 @@ class Backend(object):
             now = time.time()
 
             if end < now and now - end > (max_duration//4):
-                self._logger.error("[^][#] Running job hang. Task %s, start: %s, end: %s, now: %s, overdue: %s", what, str(start), str(end), str(now), str(now - end))
+                self._logger.error("[^][#] Running job hang. Task %s by %s, start: %s, end: %s, now: %s, overdue: %s, inputdata: %s", what, who, str(start), str(end), str(now), str(now - end), what2)
                 hang_detected = True
 
         return hang_detected
@@ -132,7 +135,9 @@ class Backend(object):
         if self.check_if_job_is_hang_and_log():
             if not self.auto_aborting:
                 self.auto_aborting = True
-                os.kill(os.getpid(), 15)
+                self._logger.error("[^][#] Restarting due running job hang. Uptime %s", str(time.time() - self._start_time_))
+                os.system("docker restart sercom-web")
+                time.sleep(2)
                 return True
 
         return False

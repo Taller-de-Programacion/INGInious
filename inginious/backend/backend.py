@@ -38,6 +38,8 @@ class Backend(object):
 
         self._start_time_ = time.time()
         self.auto_aborting = False
+        self._jobs_done = 0
+        self._jobs_crashed = 0
 
         self._poller = Poller()
         self._poller.register(self._agent_socket, zmq.POLLIN)
@@ -135,7 +137,7 @@ class Backend(object):
         if self.check_if_job_is_hang_and_log():
             if not self.auto_aborting:
                 self.auto_aborting = True
-                self._logger.error("[^][#] Restarting due running job hang. Uptime %s", str(time.time() - self._start_time_))
+                self._logger.error("[^][#] Restarting due running job hang. Uptime: %s, jobs done: %s, jobs crashed: %s, jobs waiting: %s", str(time.time() - self._start_time_), str(self._jobs_done), str(self._jobs_crashed), str(len(self._waiting_jobs)))
                 os.system("docker restart sercom-web")
                 time.sleep(2)
                 return True
@@ -320,6 +322,7 @@ class Backend(object):
 
             # Remove the job from the list of running jobs
             j = self._job_running.pop(message.job_id, None)
+            self._jobs_done += 1
             if j is None:
                 self._logger.warning("Job %s finished on agent %s but it was not present in the running queue and it should.", str(message.job_id), str(agent_addr))
 
@@ -416,6 +419,7 @@ class Backend(object):
                                               BackendJobDone(job_id, ("crash", "Agent restarted"),
                                                              0.0, {}, {}, {}, "", None, None, None))
                 del self._job_running[(client_addr, job_id)]
+                self._jobs_crashed += 1
 
         await self.update_queue()
 

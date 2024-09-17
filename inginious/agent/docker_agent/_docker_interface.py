@@ -145,6 +145,7 @@ class DockerInterface(object):  # pragma: no cover
         course_common_public_path = os.path.join(course_common_student_path, '..', 'public')
         task_public_path = os.path.join(student_path, '..', 'public')
 
+        logging.getLogger("inginious.agent").info("Creating 'container student': %s", str((parent_container_id, environment, student_path, socket_path, systemfiles_path, course_common_student_path)))
         response = self._docker.containers.create(
             environment,
             stdin_open=True,

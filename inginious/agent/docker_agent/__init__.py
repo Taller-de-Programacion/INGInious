@@ -331,6 +331,7 @@ class DockerAgent(Agent):
 
             try:
                 socket_path = path_join(sockets_path, str(socket_id) + ".sock")
+                self._logger.info("Creating 'container student': %s", str((parent_container_id, environment, student_path, socket_path, systemfiles_path, course_common_student_path)))
                 container_id = await self._docker.create_container_student(parent_container_id, environment, share_network,
                                                                            memory_limit, student_path, socket_path,
                                                                            systemfiles_path, course_common_student_path)

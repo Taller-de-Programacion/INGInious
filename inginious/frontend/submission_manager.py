@@ -266,6 +266,8 @@ class WebAppSubmissionManager:
         inputdata["@student_realname"] = self._user_manager.session_realname()
         inputdata["@has_user_full_realname_correct_format"] = "1" if self._check_user_full_realname_format() else "0"
 
+        inputdata["@best_submissions"] = str(self.get_best_submission_of_all_tasks(username, task.get_course_id()))
+
         self._hook_manager.call_hook("new_submission", submission=obj, inputdata=inputdata)
         obj["input"] = self._gridfs.put(bson.BSON.encode(inputdata))
 
@@ -345,6 +347,29 @@ class WebAppSubmissionManager:
         self._database.submissions.delete_many({"_id": {"$in": list(to_delete)}})
 
         return list(map(str, to_delete))
+
+    def get_best_submission_of_all_tasks(self, username, courseid):
+        submissions = list(self._database.submissions.find(
+            {"username": username, "courseid": courseid},
+            projection=["_id", "status", "result", "grade", "taskid"]
+        ))
+
+        best_grade_by_task = {}
+        for submission in submissions:
+            if submission.get("status", "") != "done":
+                continue
+
+            try:
+                taskid = submission["taskid"]
+                if taskid not in best_grade_by_task:
+                    best_grade_by_task[taskid] = submission["grade"]
+                else:
+                    if best_grade_by_task[taskid] < submission["grade"]:
+                        best_grade_by_task[taskid] = submission["grade"]
+            except KeyError:
+                continue
+
+        return best_grade_by_task
 
     def get_input_from_submission(self, submission, only_input=False):
         """

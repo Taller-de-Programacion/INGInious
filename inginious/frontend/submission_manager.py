@@ -263,6 +263,8 @@ class WebAppSubmissionManager:
         inputdata["@state"] = states["state"] if "state" in states else ""
 
         inputdata["@is_username_admin"] = "1" if self._user_manager.user_is_superadmin() else "0"
+        inputdata["@student_realname"] = self._user_manager.session_realname()
+        inputdata["@has_user_full_realname_correct_format"] = "1" if self._check_user_full_realname_format() else "0"
 
         self._hook_manager.call_hook("new_submission", submission=obj, inputdata=inputdata)
         obj["input"] = self._gridfs.put(bson.BSON.encode(inputdata))
@@ -622,6 +624,27 @@ class WebAppSubmissionManager:
         """
         return self._client.get_job_queue_info(jobid)
 
+    def _check_user_full_realname_format(self):
+        realname = self.user_manager.session_realname()
+        if realname == None or "-" not in realname:
+            return False
+
+        fullname, padron = realname.rsplit("-")
+        fullname = fullname.strip()
+        padron = padron.strip()
+
+        if " " not in fullname:
+            # The fullname *must* be first and last names (at least 1 space should be present)
+            return False
+
+        try:
+            padron = int(padron)
+            if padron < 80000 or padron > 300000:
+                return False
+        except ValueError:
+            return False
+
+        return True
 
 def update_pending_jobs(database):
     """ Updates pending jobs status in the database """

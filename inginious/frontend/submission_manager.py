@@ -629,7 +629,7 @@ class WebAppSubmissionManager:
         if realname == None or "-" not in realname:
             return False
 
-        fullname, padron = realname.rsplit("-")
+        fullname, padron = realname.rsplit("-", 1)
         fullname = fullname.strip()
         padron = padron.strip()
 

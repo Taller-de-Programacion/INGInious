@@ -268,7 +268,7 @@ class WebAppSubmissionManager:
             inputdata["@student_realname"] = self._user_manager.session_realname()
             inputdata["@has_user_full_realname_correct_format"] = "1" if self._check_user_full_realname_format() else "0"
 
-            inputdata["@best_submissions"] = str(self.get_best_submission_of_all_tasks(username, task.get_course_id()))
+            inputdata["@best_submissions"] = str(self._get_best_submission_of_all_tasks(username, task.get_course_id()))
         except Exception as err:
             import traceback
             self._logger.error("Error on extra inputs for task: %s %s" % (str(err), traceback.format_exc()))
@@ -354,7 +354,7 @@ class WebAppSubmissionManager:
 
         return list(map(str, to_delete))
 
-    def get_best_submission_of_all_tasks(self, username, courseid):
+    def _get_best_submission_of_all_tasks(self, username, courseid):
         submissions = list(self._database.submissions.find(
             {"username": username, "courseid": courseid},
             projection=["_id", "status", "result", "grade", "taskid"]
@@ -656,7 +656,7 @@ class WebAppSubmissionManager:
         return self._client.get_job_queue_info(jobid)
 
     def _check_user_full_realname_format(self):
-        realname = self.user_manager.session_realname()
+        realname = self._user_manager.session_realname()
         if realname == None or "-" not in realname:
             return False
 

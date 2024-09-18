@@ -263,10 +263,16 @@ class WebAppSubmissionManager:
         inputdata["@state"] = states["state"] if "state" in states else ""
 
         inputdata["@is_username_admin"] = "1" if self._user_manager.user_is_superadmin() else "0"
-        inputdata["@student_realname"] = self._user_manager.session_realname()
-        inputdata["@has_user_full_realname_correct_format"] = "1" if self._check_user_full_realname_format() else "0"
 
-        inputdata["@best_submissions"] = str(self.get_best_submission_of_all_tasks(username, task.get_course_id()))
+        try:
+            inputdata["@student_realname"] = self._user_manager.session_realname()
+            inputdata["@has_user_full_realname_correct_format"] = "1" if self._check_user_full_realname_format() else "0"
+
+            inputdata["@best_submissions"] = str(self.get_best_submission_of_all_tasks(username, task.get_course_id()))
+        except Exception as err:
+            import traceback
+            self._logger.error("Error on extra inputs for task: %s %s" % (str(err), traceback.format_exc()))
+            raise
 
         self._hook_manager.call_hook("new_submission", submission=obj, inputdata=inputdata)
         obj["input"] = self._gridfs.put(bson.BSON.encode(inputdata))

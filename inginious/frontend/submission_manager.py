@@ -360,6 +360,8 @@ class WebAppSubmissionManager:
             projection=["_id", "status", "result", "grade", "taskid"]
         ))
 
+        self._logger.info("_get_best_submission_of_all_tasks: %s" % str(submissions))
+
         best_grade_by_task = {}
         for submission in submissions:
             if submission.get("status", "") != "done":

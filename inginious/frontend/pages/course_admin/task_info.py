@@ -102,19 +102,29 @@ class CourseTaskInfoPage(INGIniousAdminPage):
             return make_csv(list(aggregation_data.values()))
 
         individual_data = individual_data.values()
-        greens = reds = total = 0
+        greens = reds = total_colored = total_in_blank = 0
         for u in individual_data:
             if u["status"] == "succeeded":
                 greens += 1
+                total_colored += 1
             elif u["status"] == "failed":
                 reds += 1
+                total_colored += 1
+            else:
+                total_in_blank += 1
 
-            total += 1
 
+        total = total_colored + total_in_blank
         summary = {
                 'greens': greens,
                 'reds': reds,
-                'total': total
+                'total_colored': total_colored,
+                'total_in_blank': total_in_blank,
+                'total': total,
+                'greens_p': int(100 * (float(greens) / total_colored)),
+                'reds_p': int(100 * (float(reds) / total_colored)),
+                'total_colored_p': int(100 * (float(total_colored) / total)),
+                'total_in_blank_p': int(100 * (float(total_in_blank) / total)),
                 }
 
         return self.template_helper.get_renderer().course_admin.task_info(course, task, individual_data, summary, [my_aggregations, other_aggregations])

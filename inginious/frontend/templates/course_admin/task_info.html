@@ -43,8 +43,10 @@ $var Navbar: $:NavbarF()
                         <thead class="table-borderless">
                         </thead>
                         <tbody>
-                            <tr><td>Greens: </td><td>$summary['greens']</td></tr>
-                            <tr><td>Reds: </td><td>$summary['reds']</td></tr>
+                            <tr><td>Greens: </td><td>$summary['greens']</td><td>$summary['greens_p']% of colored</td></tr>
+                            <tr><td>Reds: </td><td>$summary['reds']</td><td>$summary['reds_p']% of colored</td></tr>
+                            <tr><td>Total Colored: </td><td>$summary['total_colored']</td><td>$summary['total_colored_p']% of total</td></tr>
+                            <tr><td>Total in Blank: </td><td>$summary['total_in_blank']</td><td>$summary['total_in_blank_p']% of total</td></tr>
                             <tr><td>Total: </td><td>$summary['total']</td></tr>
                         </tbody>
                     </table>

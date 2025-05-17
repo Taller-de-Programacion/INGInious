@@ -101,4 +101,20 @@ class CourseTaskInfoPage(INGIniousAdminPage):
         elif "csv" in web.input() and web.input()["csv"] == "aggregations":
             return make_csv(list(aggregation_data.values()))
 
-        return self.template_helper.get_renderer().course_admin.task_info(course, task, individual_data.values(), [my_aggregations, other_aggregations])
+        individual_data = individual_data.values()
+        greens = reds = total = 0
+        for u in individual_data:
+            if u["status"] == "succeeded":
+                greens += 1
+            elif u["status"] == "failed":
+                reds += 1
+
+            total += 1
+
+        summary = {
+                'greens': greens,
+                'reds': reds,
+                'total': total
+                }
+
+        return self.template_helper.get_renderer().course_admin.task_info(course, task, individual_data, summary, [my_aggregations, other_aggregations])

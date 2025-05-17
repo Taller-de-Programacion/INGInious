@@ -1,4 +1,4 @@
-$def with (course,task,individual_data,aggregation_data)
+$def with (course,task,individual_data,summary,aggregation_data)
 
 $#
 $# This file is part of INGInious. See the LICENSE and the COPYRIGHTS files for
@@ -39,6 +39,15 @@ $var Navbar: $:NavbarF()
                             <div id="edit_task_tabs_content" class="tab-content">
                                 <div role="tabpanel" class="card-body tab-pane active" id="tab_indiv">
 
+                    <table class="table">
+                        <thead class="table-borderless">
+                        </thead>
+                        <tbody>
+                            <tr><td>Greens: </td><td>$summary['greens']</td></tr>
+                            <tr><td>Reds: </td><td>$summary['reds']</td></tr>
+                            <tr><td>Total: </td><td>$summary['total']</td></tr>
+                        </tbody>
+                    </table>
 
                     <table class="table">
                         <thead class="table-borderless">
@@ -50,11 +59,12 @@ $var Navbar: $:NavbarF()
                                     <div class="btn-group btn-group-sm" role="group">
                                         <a href="$get_homepath()/admin/${course.get_id()}/download?format=taskid%2Fusername&tasks=$task.get_id()" class="btn btn-danger"
                                            title=$:_('"Download all submissions"') data-toggle="tooltip" data-placement="bottom"><i class="fa fa-download"></i></a>
+                                    <!--
                                         $if is_admin:
                                             <a href="$get_homepath()/admin/${course.get_id()}/replay?format=taskid%2Fusername&tasks=$task.get_id()" class="btn btn-warning"
                                                title=$:_('"Replay all submissions"') data-toggle="tooltip" data-placement="bottom"><i class="fa fa-refresh"></i></a>
                                         <a href="$get_homepath()/admin/${course.get_id()}/task/${task.get_id()}?csv=students" class="btn btn-info" title="$:_('Download CSV')"
-                                           data-toggle="tooltip" data-placement="bottom"><i class="fa fa-table"></i></a>
+                                                                                                                                                   data-toggle="tooltip" data-placement="bottom"><i class="fa fa-table"></i></a> -->
                                     </div>
                                 </th>
                             </tr>

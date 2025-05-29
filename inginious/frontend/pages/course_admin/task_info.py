@@ -115,16 +115,19 @@ class CourseTaskInfoPage(INGIniousAdminPage):
 
 
         total = total_colored + total_in_blank
+
+        non_z_total_colored = max(total_colored, 1) # avoid division by zero downstream
+        non_z_total = max(total, 1) # avoid division by zero downstream
         summary = {
                 'greens': greens,
                 'reds': reds,
                 'total_colored': total_colored,
                 'total_in_blank': total_in_blank,
                 'total': total,
-                'greens_p': int(100 * (float(greens) / total_colored)),
-                'reds_p': int(100 * (float(reds) / total_colored)),
-                'total_colored_p': int(100 * (float(total_colored) / total)),
-                'total_in_blank_p': int(100 * (float(total_in_blank) / total)),
+                'greens_p': int(100 * (float(greens) / non_z_total_colored)),
+                'reds_p': int(100 * (float(reds) / non_z_total_colored)),
+                'total_colored_p': int(100 * (float(total_colored) / non_z_total)),
+                'total_in_blank_p': int(100 * (float(total_in_blank) / non_z_total)),
                 }
 
         return self.template_helper.get_renderer().course_admin.task_info(course, task, individual_data, summary, [my_aggregations, other_aggregations])
